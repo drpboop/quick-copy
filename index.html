@@ -31,8 +31,6 @@ const heading = document.getElementById('heading');
 const status = document.getElementById('status');
 const field = document.getElementById('text');
 const button = document.getElementById('copy');
-// Remove the supplied text from the address bar without navigating away.
-try { history.replaceState(null, '', location.pathname); } catch (_) {}
 field.value = text;
 let busy = false;
 async function copyText() {
@@ -45,8 +43,10 @@ async function copyText() {
     status.textContent = 'You can close this tab and return to SharePoint.';
     field.hidden = true;
     button.hidden = true;
-    // No fixed delay and no clipboard read permission required.
-    window.close();
+    // Give the browser one short task after copying before closing.
+    window.setTimeout(() => {
+      window.close();
+    }, 100);
   } catch (_) {
     heading.textContent = 'Copy your text';
     status.textContent = 'Select Copy text to allow copying. If your browser still blocks it, select the text below and copy it manually.';
@@ -59,10 +59,17 @@ async function copyText() {
 }
 button.addEventListener('click', copyText);
 if (hasText) {
-  copyText();
+  if (document.readyState === 'complete') copyText();
+  else window.addEventListener('load', copyText, { once: true });
 } else {
   heading.textContent = 'Quick Copy';
   status.textContent = 'Add ?copy= followed by URL-encoded text to this page’s link. Example: ?copy=Hello%20world';
+  const testLink = document.createElement('a');
+  testLink.href = '?copy=Hello%20world';
+  testLink.target = '_blank';
+  testLink.rel = 'noopener';
+  testLink.textContent = 'Test copy in a new tab';
+  document.querySelector('main').appendChild(testLink);
 }
 </script>
 </body>
